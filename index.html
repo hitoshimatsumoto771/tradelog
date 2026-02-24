@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TradeLog — 米国株取引記録</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ===== AUTH SCREEN ===== -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-logo">TradeLog</div>
+    <div class="auth-sub">米国株取引記録</div>
+    <div class="auth-divider"></div>
+    <button class="btn-google" id="btn-google-login">
+      <svg class="google-icon" viewBox="0 0 24 24">
+        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+      </svg>
+      Googleでログイン
+    </button>
+  </div>
+</div>
+
+<!-- ===== MAIN APP ===== -->
+<div id="app">
+
+  <!-- HEADER -->
+  <header>
+    <div class="header-left">
+      <div class="logo">TradeLog</div>
+      <div class="nisa-bar">
+        <span class="nisa-label">NISA残枠</span>
+        <span class="nisa-used" id="nisa-used">¥0万</span>
+        <span class="nisa-sep">/</span>
+        <span class="nisa-total">¥240万</span>
+        <div class="nisa-progress-wrap">
+          <div class="nisa-progress" id="nisa-progress" style="width:0%"></div>
+        </div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="fx-chip" id="fx-chip">
+        <div class="fx-dot"></div>
+        <span id="fx-rate">USD/JPY: ---</span>
+      </div>
+      <button class="btn btn-primary" id="btn-add">＋ 新規エントリー</button>
+      <button class="btn-logout" id="btn-logout">ログアウト</button>
+    </div>
+  </header>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <div class="tab active" data-tab="trades">取引履歴</div>
+    <div class="tab" data-tab="positions">保有銘柄</div>
+    <div class="tab" data-tab="analytics">パフォーマンス</div>
+  </div>
+
+  <!-- ===== TRADES PAGE ===== -->
+  <div id="page-trades" class="page active">
+    <div class="cards-row" id="summary-cards"></div>
+    <div class="toolbar">
+      <input class="search-box" type="text" id="search-input" placeholder="ティッカー検索...">
+      <select class="filter-sel" id="filter-status">
+        <option value="">すべてのステータス</option>
+        <option value="open">保有中</option>
+        <option value="partial">一部決済</option>
+        <option value="closed">決済済</option>
+      </select>
+      <select class="filter-sel" id="filter-result">
+        <option value="">すべての結果</option>
+        <option value="win">勝ち</option>
+        <option value="loss">負け</option>
+      </select>
+      <select class="filter-sel" id="filter-account">
+        <option value="">すべての口座</option>
+        <option value="nisa">NISA</option>
+        <option value="rakuten">楽天特定</option>
+        <option value="moomoo">moomoo</option>
+      </select>
+      <button class="btn" id="btn-import">📥 Notionインポート</button>
+      <button class="btn" id="btn-export">📤 CSV出力</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th onclick="sortBy('ticker')">ティッカー</th>
+            <th onclick="sortBy('account')">口座</th>
+            <th onclick="sortBy('entryDate')">エントリー日</th>
+            <th onclick="sortBy('shares')">取得株数</th>
+            <th onclick="sortBy('entryPrice')">取得単価(USD)</th>
+            <th onclick="sortBy('entryJpy')">取得単価(JPY)</th>
+            <th onclick="sortBy('totalCost')">投資元本(JPY)</th>
+            <th onclick="sortBy('per')">PER / 予想PER</th>
+            <th onclick="sortBy('exitDate')">決済日</th>
+            <th>売却株数 / 売値</th>
+            <th onclick="sortBy('pnl')">損益(JPY)</th>
+            <th onclick="sortBy('pnlPct')">損益率</th>
+            <th>結果</th>
+            <th onclick="sortBy('status')">ステータス</th>
+            <th>メモ</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="trades-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ===== POSITIONS PAGE ===== -->
+  <div id="page-positions" class="page">
+    <div class="toolbar">
+      <h3 style="font-family:var(--display);font-size:18px;color:var(--accent)">保有中銘柄</h3>
+    </div>
+    <div class="pos-grid" id="pos-grid"></div>
+  </div>
+
+  <!-- ===== ANALYTICS PAGE ===== -->
+  <div id="page-analytics" class="page">
+    <div class="cards-row" id="analytics-cards"></div>
+    <div class="analytics-row">
+      <div class="card">
+        <div class="card-label">勝敗分布</div>
+        <canvas id="wl-canvas"></canvas>
+      </div>
+      <div class="card">
+        <div class="card-label">セクター別損益 (JPY)</div>
+        <canvas id="sector-canvas"></canvas>
+      </div>
+    </div>
+  </div>
+
+</div><!-- #app -->
+
+<!-- ===== TRADE MODAL ===== -->
+<div class="overlay" id="trade-modal">
+  <div class="modal">
+    <h2 id="modal-title">新規エントリー</h2>
+    <div class="form-grid">
+
+      <div class="section-label">📋 基本情報</div>
+      <div class="fg">
+        <label>ティッカー *</label>
+        <input type="text" id="f-ticker" placeholder="AAPL" style="text-transform:uppercase">
+      </div>
+      <div class="fg">
+        <label>銘柄名</label>
+        <input type="text" id="f-name" placeholder="Apple Inc.">
+      </div>
+      <div class="fg">
+        <label>口座 *</label>
+        <select id="f-account">
+          <option value="nisa">楽天NISA（手数料無料）</option>
+          <option value="rakuten">楽天証券 特定口座</option>
+          <option value="moomoo">moomoo証券 特定口座</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label>セクター</label>
+        <select id="f-sector">
+          <option value="">選択...</option>
+          <option>テクノロジー</option>
+          <option>ヘルスケア</option>
+          <option>金融</option>
+          <option>一般消費財</option>
+          <option>生活必需品</option>
+          <option>エネルギー</option>
+          <option>素材</option>
+          <option>資本財</option>
+          <option>公益事業</option>
+          <option>不動産</option>
+          <option>通信</option>
+          <option>ETF/インデックス</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label>戦略</label>
+        <select id="f-strategy">
+          <option value="">選択...</option>
+          <option>スイングトレード</option>
+          <option>ポジショントレード</option>
+          <option>長期投資</option>
+          <option>モメンタム</option>
+          <option>バリュー投資</option>
+          <option>グロース投資</option>
+          <option>配当投資</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label>受渡日</label>
+        <input type="date" id="f-delivery-date">
+      </div>
+
+      <div class="section-label">🟢 エントリー</div>
+      <div class="fg">
+        <label>エントリー日 *</label>
+        <input type="date" id="f-entry-date">
+      </div>
+      <div class="fg">
+        <label>取得株数 *</label>
+        <input type="number" id="f-shares" placeholder="100" min="1" step="1">
+      </div>
+      <div class="fg">
+        <label>取得単価 (USD) *</label>
+        <input type="number" id="f-entry-price" placeholder="150.00" step="0.0001">
+      </div>
+      <div class="fg">
+        <label>エントリー時 USD/JPY</label>
+        <input type="number" id="f-entry-fx" placeholder="153.00" step="0.01">
+      </div>
+      <div class="fg">
+        <label>取得単価 (JPY) 自動</label>
+        <input type="text" id="f-entry-jpy" readonly placeholder="¥0">
+      </div>
+      <div class="fg">
+        <label>投資元本 (JPY) 自動</label>
+        <input type="text" id="f-total-cost" readonly placeholder="¥0">
+      </div>
+      <div class="fg span2">
+        <label>手数料（自動計算）</label>
+        <div style="padding:9px 11px; background:var(--surface3); border:1px solid var(--border); border-radius:7px; font-family:var(--mono); font-size:13px; color:var(--blue)" id="f-commission-display">¥0</div>
+      </div>
+
+      <div class="section-label">📊 バリュエーション</div>
+      <div class="fg">
+        <label>取得時 PER</label>
+        <input type="number" id="f-per" placeholder="25.0" step="0.1">
+      </div>
+      <div class="fg">
+        <label>予想 PER (Forward)</label>
+        <input type="number" id="f-per-fwd" placeholder="22.0" step="0.1">
+      </div>
+
+      <div class="section-label">⚠️ リスク管理</div>
+      <div class="fg">
+        <label>損切価格 (USD)</label>
+        <input type="number" id="f-stop-loss" placeholder="140.00" step="0.01">
+      </div>
+      <div class="fg">
+        <label>目標価格 (USD)</label>
+        <input type="number" id="f-take-profit" placeholder="180.00" step="0.01">
+      </div>
+      <div class="fg span2">
+        <label>エントリー理由</label>
+        <input type="text" id="f-entry-reason" placeholder="ブレイクアウト、決算前買い 等">
+      </div>
+
+      <div class="section-label">📝 メモ・スクショ</div>
+      <div class="fg span2">
+        <label>メモ・備考</label>
+        <textarea id="f-note" rows="2" placeholder="チャートの形状、市場状況など..."></textarea>
+      </div>
+
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn" id="btn-close-modal">キャンセル</button>
+      <button class="btn btn-primary" id="btn-save-trade">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== EXIT MODAL ===== -->
+<div class="overlay" id="exit-modal">
+  <div class="modal" style="width:500px">
+    <h2>決済記録</h2>
+    <div style="display:flex; gap:16px; margin-bottom:20px; padding:14px; background:var(--surface2); border-radius:8px; font-size:13px">
+      <div><span style="color:var(--muted)">銘柄: </span><span class="ticker-pill" id="exit-ticker"></span></div>
+      <div><span style="color:var(--muted)">残株数: </span><span class="mono" id="exit-remain"></span></div>
+      <div><span style="color:var(--muted)">平均取得単価: </span><span class="mono" id="exit-avg-cost"></span></div>
+    </div>
+    <div id="exits-history"></div>
+    <div class="form-grid">
+      <div class="fg">
+        <label>決済日 *</label>
+        <input type="date" id="f-exit-date">
+      </div>
+      <div class="fg">
+        <label>売却株数 *</label>
+        <input type="number" id="f-exit-shares" placeholder="50" min="1" step="1">
+      </div>
+      <div class="fg">
+        <label>売値 (USD) *</label>
+        <input type="number" id="f-exit-price" placeholder="160.00" step="0.0001">
+      </div>
+      <div class="fg">
+        <label>決済時 USD/JPY</label>
+        <input type="number" id="f-exit-fx" step="0.01">
+      </div>
+      <div class="fg span2">
+        <label>損益プレビュー（自動）</label>
+        <div style="padding:10px 12px; background:var(--surface3); border:1px solid var(--border); border-radius:7px; font-family:var(--mono); font-size:15px; font-weight:600" id="exit-pnl-preview">—</div>
+      </div>
+      <div class="fg span2">
+        <label>決済理由</label>
+        <input type="text" id="f-exit-reason" placeholder="利確目標達成、損切、リバランス 等">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" id="btn-close-exit">キャンセル</button>
+      <button class="btn btn-primary" id="btn-save-exit">決済を記録</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== FX MODAL ===== -->
+<div class="overlay" id="fx-modal">
+  <div class="modal modal-sm">
+    <h2>USD/JPY レート</h2>
+    <div class="fg" style="margin-bottom:16px">
+      <label>現在のレート</label>
+      <input type="number" id="fx-modal-input" step="0.01" placeholder="153.00">
+    </div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:16px">自動取得が可能です。手動で上書きもできます。</p>
+    <div class="modal-footer">
+      <button class="btn" id="fx-cancel">キャンセル</button>
+      <button class="btn" id="fx-refresh">🔄 自動取得</button>
+      <button class="btn btn-primary" id="fx-save">設定</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== IMPORT MODAL ===== -->
+<div class="overlay" id="import-modal">
+  <div class="modal" style="width:560px">
+    <h2>Notion CSVインポート</h2>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:16px">
+      NotionのデータベースをCSV形式でエクスポートし、ここに読み込んでください。<br>
+      対応カラム: ティッカー、エントリー、取得単価（ドル）、取得株数、PER、予想PER、クローズ、売却株数、損益（円）、受渡日、投資元本（円）、メモ
+    </p>
+    <div class="drop-zone" id="drop-zone">
+      <div class="drop-zone-icon">📂</div>
+      <div>CSVファイルをドラッグ＆ドロップ</div>
+      <div style="font-size:12px;margin-top:4px">またはクリックして選択</div>
+    </div>
+    <input type="file" id="csv-file-input" accept=".csv" style="display:none">
+    <div id="import-preview"></div>
+    <div class="modal-footer">
+      <button class="btn" id="btn-close-import">キャンセル</button>
+      <button class="btn btn-primary" id="btn-confirm-import" style="display:none">取り込む</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
