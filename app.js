@@ -367,7 +367,7 @@ function clearForm() {
   $('f-commission-display').textContent = '¥0';
   $('f-entry-jpy').value = '';
   $('f-total-cost').value = '';
-  $('img-preview').innerHTML = '';
+  //$('img-preview').innerHTML = '';
 }
 
 $('btn-close-modal').addEventListener('click', () => $('trade-modal').classList.remove('open'));
