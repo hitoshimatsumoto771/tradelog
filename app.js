@@ -726,8 +726,8 @@ async function handleCSV(file) {
     const get = key => idxMap[key] !== -1 ? (cols[idxMap[key]]||'').replace(/^["']|["']$/g,'').trim() : '';
     const ticker = get('ticker').toUpperCase();
     if (!ticker) continue;
-    const entryPrice = parseFloat(get('entryPrice')) || null;
-    const shares = parseInt(get('shares')) || null;
+    const entryPrice = parseFloat(get('entryPrice').replace(/[$,]/g,'')) || null;
+    const shares = parseInt(get('shares').trim()) || null;
     const entryDate = formatNotionDate(get('entryDate'));
     const exitDate = formatNotionDate(get('exitDate'));
     const exitPriceStr = get('exitPrice').replace(/[$,￥]/g, '');
