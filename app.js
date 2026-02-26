@@ -1,7 +1,7 @@
 import { db, auth, googleProvider } from './firebase.js';
 import {
   collection, doc, addDoc, updateDoc, deleteDoc,
-  onSnapshot, query, where, orderBy, serverTimestamp
+  onSnapshot, query, where, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import {
   signInWithPopup, signOut, onAuthStateChanged
@@ -65,8 +65,7 @@ function startListener() {
   if (unsubscribe) unsubscribe();
   const q = query(
     collection(db, 'tradelog'),
-    where('uid', '==', currentUser.uid),
-    orderBy('entryDate', 'desc')
+    where('uid', '==', currentUser.uid)
   );
   unsubscribe = onSnapshot(q, snap => {
     positions = snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -367,7 +366,7 @@ function clearForm() {
   $('f-commission-display').textContent = '¥0';
   $('f-entry-jpy').value = '';
   $('f-total-cost').value = '';
-  //$('img-preview').innerHTML = '';
+  $('img-preview').innerHTML = '';
 }
 
 $('btn-close-modal').addEventListener('click', () => $('trade-modal').classList.remove('open'));
