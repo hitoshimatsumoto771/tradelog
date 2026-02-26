@@ -682,18 +682,21 @@ async function handleCSV(file) {
 
   // Notionのカラム名マッピング
   const map = {
-    ticker: ['ティッカー','Ticker','ticker','銘柄'],
+    ticker: ['ティッカー',' ティッカー','Ticker','ticker','銘柄'],
     entryDate: ['エントリー','エントリー日','Entry Date','entry_date'],
-    entryPrice: ['取得単価（ドル）','取得単価(ドル)','取得単価','Entry Price','entry_price','買値'],
-    shares: ['取得株数','株数','Shares','shares'],
+    entryPrice: ['取得単価 (ドル)','取得単価（ドル）','取得単価(ドル)','取得単価','Entry Price','entry_price','買値'],
+    shares: ['取得株数 ','取得株数','株数','Shares','shares'],
     per: ['PER','per'],
-    perFwd: ['予想PER','予想per','Forward PER'],
+    perFwd: ['予測PER','予想PER','予想per','Forward PER'],
     exitDate: ['クローズ','決済日','Exit Date','exit_date'],
+    exitPrice: ['売却単価 (ドル)','売却単価（ドル）','売却単価','Exit Price'],
     exitShares: ['売却株数','Exit Shares'],
+    strategy: ['取引タイプ','戦略','Strategy'],
     note: ['備考','メモ','Note','note'],
     pnl: ['損益（円）','損益(円)','損益','PnL'],
     deliveryDate: ['受渡日','Delivery Date'],
-    totalCost: ['投資元本（円）','投資元本(円)','投資元本','投資総額'],
+    totalCost: ['投資元本 (円)','投資元本（円）','投資元本(円)','投資元本','投資総額'],
+    result: ['結果','Result'],
   };
 
   const getIdx = aliases => {
@@ -727,10 +730,11 @@ async function handleCSV(file) {
     const shares = parseInt(get('shares')) || null;
     const entryDate = formatNotionDate(get('entryDate'));
     const exitDate = formatNotionDate(get('exitDate'));
-    const exitPrice = null; // Notionには売値(USD)がないためスキップ
+    const exitPriceStr = get('exitPrice').replace(/[$,￥]/g, '');
+    const exitPrice = parseFloat(exitPriceStr) || null;
     const exitShares = parseInt(get('exitShares')) || null;
-    const pnlJpy = parseFloat(get('pnl').replace(/[¥,]/g,'')) || null;
-    const totalCost = parseFloat(get('totalCost').replace(/[¥,]/g,'')) || null;
+    const pnlJpy = parseFloat(get('pnl').replace(/[¥￥,]/g,'')) || null;
+    const totalCost = parseFloat(get('totalCost').replace(/[¥￥,]/g,'')) || null;
 
     const trade = {
       ticker,
