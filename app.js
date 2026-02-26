@@ -549,7 +549,9 @@ function renderPositions() {
     const totalShares = g.items.reduce((s, t) => { const c = calcTrade(t); return s + c.remainShares; }, 0);
     const totalCost = g.items.reduce((s, t) => { const c = calcTrade(t); return s + (t.totalCost * c.remainShares / t.shares); }, 0);
     const avgJpy = totalShares > 0 ? totalCost / totalShares : 0;
-    const avgUsd = avgJpy / (g.items[0].entryFx || fxRate);
+    // 平均取得単価(USD)は各取引のUSD投資額÷株数で正確に計算
+    const totalUsdCost = g.items.reduce((s, t) => { const c = calcTrade(t); return s + (t.entryPrice * c.remainShares); }, 0);
+    const avgUsd = totalShares > 0 ? totalUsdCost / totalShares : 0;
     const acctLabel = { nisa:'NISA', rakuten:'楽天特定', moomoo:'moomoo' }[g.items[0].account] || '';
     const acctCls = { nisa:'acct-nisa', rakuten:'acct-rakuten', moomoo:'acct-moomoo' }[g.items[0].account] || '';
     return `<div class="pos-card">
