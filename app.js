@@ -208,6 +208,13 @@ function renderAll() {
   renderTrades();
 }
 
+
+// ==================== URL DETECTION ====================
+function linkify(text) {
+  if (!text) return '—';
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  return text.replace(urlRegex, url => `<a href="${url}" target="_blank" style="color:var(--accent);text-decoration:underline;" onclick="event.stopPropagation()">🔗 リンクを開く</a>`);
+}
 // ==================== RENDER TRADES ====================
 function getFiltered() {
   const q = ($('search-input').value || '').toUpperCase();
@@ -286,7 +293,7 @@ function renderTrades() {
       <td class="mono ${pnlCls}">${fmtPct(c.pnlPct)}</td>
       <td><span class="result-pill ${resultCls}">${resultLabel}</span>${rr ? `<div class="sub-text">RR:${rr}</div>` : ''}</td>
       <td><span class="status-pill ${statusCls}">${statusLabel}</span></td>
-      <td style="max-width:140px; overflow:hidden; text-overflow:ellipsis; color:var(--text2)">${t.note||'—'}</td>
+      <td style="max-width:160px; color:var(--text2)">${linkify(t.note)}</td>
       <td>
         <button class="icon-btn" onclick="openEdit('${t.id}')" title="編集">✏️</button>
         ${c.status !== 'closed' ? `<button class="icon-btn exit" onclick="openExitModal('${t.id}')" title="決済">💹</button>` : ''}
