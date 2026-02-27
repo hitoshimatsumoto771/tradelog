@@ -454,7 +454,7 @@ tbody td {
   position: fixed;
   inset: 0;
   background: rgba(0,0,0,0.8);
-  z-index: 500;
+  z-index: 1000;
   align-items: center;
   justify-content: center;
   backdrop-filter: blur(6px);
